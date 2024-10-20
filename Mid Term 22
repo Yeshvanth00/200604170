@@ -1,0 +1,140 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "df753247-cdaa-48b3-842d-08fa1055ae64",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "(2,)\n",
+      "(4,)\n"
+     ]
+    }
+   ],
+   "source": [
+    "import sqlite3\n",
+    "\n",
+    "\n",
+    "conn = sqlite3.connect(':memory:')\n",
+    "cursor = conn.cursor()\n",
+    "\n",
+    "\n",
+    "cursor.execute('''\n",
+    "    CREATE TABLE Weather (\n",
+    "        id INTEGER PRIMARY KEY,\n",
+    "        recordDate DATE,\n",
+    "        temperature INTEGER\n",
+    "    )\n",
+    "''')\n",
+    "\n",
+    "\n",
+    "weather_data = [\n",
+    "    (1, '2015-01-01', 10),\n",
+    "    (2, '2015-01-02', 25),\n",
+    "    (3, '2015-01-03', 20),\n",
+    "    (4, '2015-01-04', 30)\n",
+    "]\n",
+    "\n",
+    "cursor.executemany('INSERT INTO Weather (id, recordDate, temperature) VALUES (?, ?, ?)', weather_data)\n",
+    "conn.commit()\n",
+    "\n",
+    "\n",
+    "query = '''\n",
+    "    SELECT w1.id\n",
+    "    FROM Weather w1\n",
+    "    JOIN Weather w2 ON w1.recordDate = date(w2.recordDate, '+1 day')\n",
+    "    WHERE w1.temperature > w2.temperature\n",
+    "'''\n",
+    "\n",
+    "cursor.execute(query)\n",
+    "result_sql = cursor.fetchall()\n",
+    "\n",
+    "\n",
+    "for row in result_sql:\n",
+    "    print(row)\n",
+    "\n",
+    "\n",
+    "conn.close()\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "2210fa05-6a20-4934-91f5-3b389c366c2d",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "   id\n",
+      "1   2\n",
+      "3   4\n"
+     ]
+    }
+   ],
+   "source": [
+    "import pandas as pd\n",
+    "\n",
+    "\n",
+    "data = {\n",
+    "    'id': [1, 2, 3, 4],\n",
+    "    'recordDate': ['2015-01-01', '2015-01-02', '2015-01-03', '2015-01-04'],\n",
+    "    'temperature': [10, 25, 20, 30]\n",
+    "}\n",
+    "\n",
+    "\n",
+    "weather_df = pd.DataFrame(data)\n",
+    "\n",
+    "\n",
+    "weather_df['recordDate'] = pd.to_datetime(weather_df['recordDate'])\n",
+    "\n",
+    "\n",
+    "weather_df = weather_df.sort_values(by='recordDate')\n",
+    "\n",
+    "\n",
+    "weather_df['temp_diff'] = weather_df['temperature'] - weather_df['temperature'].shift(1)\n",
+    "\n",
+    "\n",
+    "result_df = weather_df[weather_df['temp_diff'] > 0]\n",
+    "\n",
+    "\n",
+    "result = result_df[['id']]\n",
+    "print(result)\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "4527bb12-f8c1-4e6e-846f-5e3eec56a443",
+   "metadata": {},
+   "outputs": [],
+   "source": []
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3 (ipykernel)",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.12.4"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
